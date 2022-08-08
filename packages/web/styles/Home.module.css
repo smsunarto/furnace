@@ -3,13 +3,12 @@
 }
 
 .main {
-  min-height: 100vh;
-  padding: 4rem 0;
-  flex: 1;
+  border: 1px solid #eaeaea;
   display: flex;
+  flex: 1;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
+  padding: 4rem;
+  margin: 4rem;
 }
 
 .footer {
