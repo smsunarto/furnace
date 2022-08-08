@@ -1,50 +1,49 @@
+import { useState } from 'react'
 import Head from 'next/head'
 import Image from 'next/image'
 import styles from '../styles/Home.module.css'
 import GreeterAbi from '../abi/Greeter.sol/Greeter.json'
+import ContractFunction from '../components/ContractFunction'
+import { useContractEvent } from 'wagmi'
+
+const abi = GreeterAbi.abi
+console.log('🚀 ~ Home ~ abi', abi)
 
 export default function Home() {
-  const abi = GreeterAbi.abi
-  console.log('🚀 ~ Home ~ abi', abi)
+  const [value, setValue] = useState()
 
+  useContractEvent({
+    addressOrName: '0xB41DB45C57347669704C6E05305273A6b21e4b71',
+    contractInterface: abi,
+    eventName: 'GMEverybodyGM',
+    listener: (event) => {
+      console.log(event)
+      setValue(event[0].event)
+    },
+  })
   return (
     <div>
       <Head>
-        <title>furnace</title>
+        <title>♨️ furnace</title>
         <meta name="description" content="scaffold-eth but better" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
       <main className={styles.main}>
-        <h1>functions</h1>
+        <h1>♨️ incoming events ♨️</h1>
+        <p>{value}</p>
+        <br />
+        <h1>♨️ functions ♨️</h1>
         {abi.map((item) => {
           if (!item.name) return
           return (
-            <div
-              key={item.name}
-              style={{
-                borderBottom: '1px solid gray',
-                padding: '2rem 0',
-              }}
-            >
-              <h1>
-                <b>{item.name}</b>
-              </h1>
-              {item.inputs.map((input) => {
-                return (
-                  <div
-                    key={input.name}
-                    style={{ display: 'flex', gap: '12px' }}
-                  >
-                    <p>{input.name}:</p>
-                    <input
-                      name={input.name}
-                      placeholder={input.type}
-                      type="text"
-                    />
-                  </div>
-                )
-              })}
+            <div key={item.name}>
+              <ContractFunction
+                inputs={item.inputs}
+                name={item.name}
+                stateMutatability={item.stateMutability}
+                type={item.type}
+              />
             </div>
           )
         })}
