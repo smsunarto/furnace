@@ -10,8 +10,8 @@ const abi = GreeterAbi.abi
 type Props = {
   inputs: Input[]
   name?: string
-  stateMutatability: 'view' | 'nonpayable' | 'payable'
-  type: 'function' | 'constructor' | 'event' | 'fallback'
+  stateMutatability: string
+  type: string
 }
 
 type Input = {
@@ -20,7 +20,7 @@ type Input = {
   type: string
 }
 
-const ContractFunction: React.FC<Props> = ({
+export const ContractFunction: React.FC<Props> = ({
   inputs,
   name,
   stateMutatability,
@@ -51,15 +51,19 @@ const ContractRead: React.FC<Props> = ({
   stateMutatability,
   type,
 }) => {
-  const [value, setValue] = useState()
-  console.log('🚀 ~ value', value)
-
-  const { data, status } = useContractRead({
-    addressOrName: '0xB41DB45C57347669704C6E05305273A6b21e4b71',
+  const { refetch, data, isLoading, isError } = useContractRead({
+    addressOrName: '0x5fbdb2315678afecb367f032d93f642f64180aa3',
     contractInterface: abi,
     functionName: name,
-    // enabled: false,
+    enabled: false,
   })
+
+  const [value, setValue] = useState(data)
+
+  const handleRead = async () => {
+    const { data } = await refetch()
+    setValue(data)
+  }
 
   return (
     <>
@@ -67,12 +71,11 @@ const ContractRead: React.FC<Props> = ({
         <b>{name}</b>
       </h1>
       <button
-        onClick={() => setValue(data)}
+        onClick={() => handleRead()}
         style={{ border: '1px solid #eaeaea', padding: '0.5rem 1rem' }}
       >
         call
       </button>
-      <p>status: {status}</p>
       {value && <p>Output: {value}</p>}
     </>
   )
@@ -84,68 +87,60 @@ const ContractWrite: React.FC<Props> = ({
   stateMutatability,
   type,
 }) => {
-  const [value, setValue] = useState()
+  const [value, setValue] = useState('')
 
-  const { config, error } = usePrepareContractWrite({
-    addressOrName: '0xB41DB45C57347669704C6E05305273A6b21e4b71',
+  const { config } = usePrepareContractWrite({
+    addressOrName: '0x5fbdb2315678afecb367f032d93f642f64180aa3',
     contractInterface: abi,
     functionName: name,
     args: [value],
   })
-  const { data, status, write } = useContractWrite(config)
 
-  const txHash = status === 'success' ? data.hash : ''
+  const { data, isLoading, isSuccess, write } = useContractWrite(config)
 
   const handleChange = (event) => {
-    const value = event.target.value
-    setValue(value)
+    setValue(event.target.value)
   }
 
-  const disabled = (inputs.length > 0 && !value) || !write
+  console.log(inputs)
 
   return (
     <>
       <h1>
         <b>{name}</b>
       </h1>
-      {inputs.map((input) => {
-        const arg = input as Input
-        return (
-          <div key={input.name} style={{ display: 'flex', gap: '12px' }}>
-            <p>{input.name}:</p>
-            <input
-              name={input.name}
-              onChange={handleChange}
-              placeholder={input.type}
-              type="text"
-            />
-          </div>
-        )
-      })}
+      {inputs &&
+        inputs.map((input) => {
+          return (
+            <div key={input.name} style={{ display: 'flex', gap: '12px' }}>
+              <p>{input.name}:</p>
+              <div className="mb-3 pt-0">
+                <input
+                  type="text"
+                  className="px-3 py-3 placeholder-slate-300 text-slate-600 relative bg-white rounded text-sm border-0 shadow outline-none focus:outline-none focus:ring w-full"
+                  name={input.name}
+                  onChange={handleChange}
+                  placeholder={input.type}
+                />
+              </div>
+            </div>
+          )
+        })}
+
       <button
-        disabled={disabled}
-        onClick={() => write()}
+        disabled={!write}
+        onClick={() => write?.()}
         style={{
           border: '1px solid #eaeaea',
-          cursor: disabled ? 'not-allowed' : 'pointer',
+          cursor: !write ? 'not-allowed' : 'pointer',
           padding: '0.5rem 1rem',
-          opacity: disabled ? 0.5 : 1,
+          opacity: !write ? 0.5 : 1,
         }}
       >
         call
       </button>
-      <p>status: {status}</p>
-      {txHash && (
-        <a
-          href={`https://ropsten.etherscan.io/tx/${txHash}`}
-          style={{ color: '#92fca4' }}
-          target="_blank"
-        >
-          view in block explorer
-        </a>
-      )}
+      {isLoading && <div>Check Wallet</div>}
+      {isSuccess && <div>Transaction: {JSON.stringify(data)}</div>}
     </>
   )
 }
-
-export default ContractFunction
