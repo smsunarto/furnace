@@ -1,21 +1,25 @@
-import '../styles/globals.css'
+import { ChakraProvider } from '@chakra-ui/react'
+import '@fontsource/ibm-plex-mono'
+import '@fontsource/inter'
+import { getDefaultWallets, RainbowKitProvider } from '@rainbow-me/rainbowkit'
 import '@rainbow-me/rainbowkit/styles.css'
 import type { AppProps } from 'next/app'
-import { RainbowKitProvider, getDefaultWallets } from '@rainbow-me/rainbowkit'
 import { chain, configureChains, createClient, WagmiConfig } from 'wagmi'
 import { alchemyProvider } from 'wagmi/providers/alchemy'
 import { publicProvider } from 'wagmi/providers/public'
 import Layout from '../components/Layout'
+import theme from '../theme'
 
 const { chains, provider, webSocketProvider } = configureChains(
   [
-    chain.mainnet,
-    ...(process.env.NEXT_PUBLIC_ENABLE_TESTNETS === 'true'
-      ? [chain.goerli, chain.kovan, chain.rinkeby, chain.ropsten]
-      : []),
-    ...(process.env.NEXT_PUBLIC_ENABLE_FOUNDRY === 'true'
-      ? [chain.localhost]
-      : []),
+    chain.ropsten,
+    // chain.mainnet,
+    // ...(process.env.NEXT_PUBLIC_ENABLE_TESTNETS === 'true'
+    //   ? [chain.goerli, chain.kovan, chain.rinkeby, chain.ropsten]
+    //   : []),
+    // ...(process.env.NEXT_PUBLIC_ENABLE_FOUNDRY === 'true'
+    //   ? [chain.localhost]
+    //   : []),
   ],
   [
     alchemyProvider({
@@ -43,9 +47,11 @@ function MyApp({ Component, pageProps }: AppProps) {
   return (
     <WagmiConfig client={wagmiClient}>
       <RainbowKitProvider chains={chains}>
-        <Layout>
-          <Component {...pageProps} />
-        </Layout>
+        <ChakraProvider theme={theme}>
+          <Layout>
+            <Component {...pageProps} />
+          </Layout>
+        </ChakraProvider>
       </RainbowKitProvider>
     </WagmiConfig>
   )
